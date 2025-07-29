@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Book Inventory Management</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            padding: 32px 40px 40px 40px;
+        }
+        h1 {
+            margin-top: 0;
+            color: #2d3a4b;
+        }
+        .book-form {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .book-form input {
+            padding: 8px 12px;
+            border: 1px solid #cfd8dc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .book-form button {
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+        .book-form button:hover {
+            background: #1565c0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+        }
+        th {
+            background: #e3eaf2;
+            color: #2d3a4b;
+        }
+        tr:nth-child(even) {
+            background: #f7fafd;
+        }
+        .actions button {
+            margin-right: 8px;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .edit { background: #039be5; color: #fff; }
+        .delete { background: #e53935; color: #fff; }
+        .edit:hover { background: #0277bd; }
+        .delete:hover { background: #b71c1c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Book Inventory Management</h1>
+            <div style="display:flex; gap:12px;">
+                <button id="openSearchBtn" style="background:#1976d2; color:#fff; border:none; padding:10px 24px; border-radius:6px; font-size:1.1rem; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.07);">Search</button>
+                <button id="openAddBookBtn" style="background:#43a047; color:#fff; border:none; padding:10px 24px; border-radius:6px; font-size:1.1rem; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.07);">Add Book</button>
+                <button id="openBulkDateBtn" style="background:#ff9800; color:#fff; border:none; padding:10px 24px; border-radius:6px; font-size:1.1rem; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.07);">Add Bulk Books</button>
+            </div>
+        </div>
+        <!-- Search Modal -->
+        <div id="searchModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(44,62,80,0.18); z-index:1000; align-items:center; justify-content:center;">
+            <div id="searchPanel" style="background:#fff; border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:32px 36px 28px 36px; min-width:340px; min-height:0; max-width:96vw; max-height:90vh; transform:translateY(-40px) scale(0.98); opacity:0; transition:all 0.35s cubic-bezier(.4,2,.6,1);">
+                <h2 style="margin-top:0; color:#2d3a4b;">Search Books</h2>
+                <div style="margin-bottom:12px; color:#444; font-size:1rem;">
+                    You can search by any combination of <b>Book Name</b>, <b>Author</b>, <b>Title</b>, <b>Category</b>, or <b>Available Sales Quantity</b> (with =, &lt;, &gt;).<br>
+                    Leave fields blank to ignore them.
+                </div>
+                <form id="searchForm" style="display:flex; flex-direction:column; gap:12px; align-items:stretch; width:100%;">
+                    <input type="text" name="bookName" placeholder="Book Name" style="padding:8px 12px; border:1px solid #cfd8dc; border-radius:4px; font-size:1rem;">
+                    <input type="text" name="authorName" placeholder="Author" style="padding:8px 12px; border:1px solid #cfd8dc; border-radius:4px; font-size:1rem;">
+                    <input type="text" name="bookTitle" placeholder="Title" style="padding:8px 12px; border:1px solid #cfd8dc; border-radius:4px; font-size:1rem;">
+                    <select name="category" style="padding:8px 12px; border:1px solid #cfd8dc; border-radius:4px; font-size:1rem; min-width:160px;">
+                        <option value="">Category</option>
+                        <optgroup label="Fiction Categories">
+                            <option>Fantasy</option>
+                            <option>Science Fiction</option>
+                            <option>Mystery</option>
+                            <option>Thriller</option>
+                            <option>Romance</option>
+                            <option>Historical Fiction</option>
+                            <option>Horror</option>
+                            <option>Adventure</option>
+                            <option>Dystopian</option>
+                            <option>Literary Fiction</option>
+                        </optgroup>
+                        <optgroup label="Non-Fiction Categories">
+                            <option>Biography / Autobiography</option>
+                            <option>Self-help / Personal Development</option>
+                            <option>History</option>
+                            <option>Philosophy</option>
+                            <option>Science</option>
+                            <option>Travel</option>
+                            <option>Psychology</option>
+                            <option>True Crime</option>
+                            <option>Religion / Spirituality</option>
+                            <option>Business / Finance</option>
+                        </optgroup>
+                        <optgroup label="Children & Young Adult">
+                            <option>Picture Books</option>
+                            <option>Early Readers</option>
+                            <option>Middle Grade</option>
+                            <option>Young Adult (YA) Fiction</option>
+                            <option>Educational / Learning Books</option>
+                            <option>Fairy Tales & Folklore</option>
+                        </optgroup>
+                        <optgroup label="Academic / Educational">
+                            <option>Textbooks</option>
+                            <option>Engineering</option>
+                            <option>Mathematics</option>
+                            <option>Computer Science</option>
+                            <option>Law</option>
+                            <option>Medicine</option>
+                            <option>Language Learning</option>
+                            <option>Exam Preparation (e.g., GRE, SAT)</option>
+                        </optgroup>
+                        <optgroup label="Technical / Professional">
+                            <option>Programming</option>
+                            <option>Software Development</option>
+                            <option>Networking</option>
+                            <option>Cybersecurity</option>
+                            <option>Data Science / AI / ML</option>
+                            <option>Project Management</option>
+                            <option>Design / UI-UX</option>
+                            <option>DevOps / Cloud</option>
+                        </optgroup>
+                        <optgroup label="Other"> <option>Other</option> </optgroup>
+                    </select>
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        <select name="availableSalesQuantityOp" style="padding:8px 6px; border:1px solid #cfd8dc; border-radius:4px; font-size:1rem;">
+                            <option value="=">=</option>
+                            <option value=">">&gt;</option>
+                            <option value="<">&lt;</option>
+                        </select>
+                        <input type="number" name="availableSalesQuantity" placeholder="Available Sales Quantity" min="0" style="padding:8px 12px; border:1px solid #cfd8dc; border-radius:4px; font-size:1rem; width:180px;">
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+                        <button type="button" id="cancelSearchBtn" style="background:#888; color:#fff; border:none; padding:8px 18px; border-radius:4px; cursor:pointer; font-size:1rem;">Cancel</button>
+                        <button type="submit" style="background:#1976d2; color:#fff; border:none; padding:8px 18px; border-radius:4px; cursor:pointer; font-size:1rem;">Search</button>
+                        <button type="button" id="clearSearchBtn" style="background:#bbb; color:#222; border:none; padding:8px 18px; border-radius:4px; cursor:pointer; font-size:1rem;">Clear</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Bulk Upload Modal -->
+        <div id="bulkUploadModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(44,62,80,0.18); z-index:1000; align-items:center; justify-content:center;">
+            <div id="bulkUploadPanel" style="background:#fff; border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:32px 36px 28px 36px; min-width:400px; min-height:0; max-width:96vw; max-height:90vh; transform:translateY(-40px) scale(0.98); opacity:0; transition:all 0.35s cubic-bezier(.4,2,.6,1);">
+                <h2 style="margin-top:0; color:#2d3a4b;">Upload Bulk Books</h2>
+                <div style="margin-bottom:20px; color:#444; font-size:1rem;">
+                    Upload a CSV file containing book data. File size should be less than 10MB.
+                </div>
+                <form id="bulkUploadForm" style="display:flex; flex-direction:column; gap:16px; align-items:stretch; width:100%;">
+                    <div style="border:2px dashed #cfd8dc; border-radius:8px; padding:20px; text-align:center; background:#f8f9fa;">
+                        <input type="file" id="csvFile" name="file" accept=".csv" style="display:none;" required>
+                        <label for="csvFile" style="cursor:pointer; color:#1976d2; font-weight:500;">
+                            <div style="font-size:2rem; margin-bottom:8px;">📁</div>
+                            <div>Click to select CSV file</div>
+                            <div style="font-size:0.9rem; color:#666; margin-top:4px;">or drag and drop here</div>
+                        </label>
+                    </div>
+                    <div id="fileInfo" style="display:none; padding:12px; background:#e8f5e8; border-radius:6px; border:1px solid #4caf50;">
+                        <div style="font-weight:500; color:#2e7d32;">Selected file: <span id="fileName"></span></div>
+                        <div style="font-size:0.9rem; color:#388e3c;">Size: <span id="fileSize"></span></div>
+                    </div>
+                    <div id="fileError" style="display:none; padding:12px; background:#ffebee; border-radius:6px; border:1px solid #f44336;">
+                        <div style="color:#c62828; font-weight:500;" id="errorMessage"></div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+                        <button type="button" id="cancelBulkUploadBtn" style="background:#888; color:#fff; border:none; padding:8px 18px; border-radius:4px; cursor:pointer; font-size:1rem;">Cancel</button>
+                        <button type="submit" id="uploadBtn" style="background:#ff9800; color:#fff; border:none; padding:8px 18px; border-radius:4px; cursor:pointer; font-size:1rem;">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Add Book Modal -->
+        <div id="addBookModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(44,62,80,0.18); z-index:1000; align-items:center; justify-content:center;">
+            <div id="addBookPanel" style="background:#fff; border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.18); padding:32px 36px 28px 36px; min-width:340px; min-height:0; max-width:96vw; max-height:90vh; transform:translateY(-40px) scale(0.98); opacity:0; transition:all 0.35s cubic-bezier(.4,2,.6,1);">
+                <h2 style="margin-top:0; color:#2d3a4b;">Add Book</h2>
+                <form class="book-form" id="bookForm" onsubmit="return false;">
+                    <div id="bookEntries">
+                        <!-- Book entry forms will be rendered here by JS -->
+                    </div>
+                    <button type="button" id="addBookEntryBtn" style="background:#43a047; color:#fff; border:none; padding:6px 16px; border-radius:4px; font-size:1.2rem; margin:10px 0 0 0;">+</button>
+                    <button type="submit" id="submitBtn">Add Book</button>
+                    <button type="button" id="cancelEditBtn" style="display:none; background:#888;">Cancel</button>
+                </form>
+            </div>
+        </div>
+        <table id="booksTable">
+            <thead>
+                <tr>
+                    <th>Book ID</th>
+                    <th>Book Name</th>
+                    <th>Author Name</th>
+                    <th>Book Title</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Remaining Stock</th>
+                    <th>Total Stock</th>
+                    <th>Registration Date</th>
+                    <th>Updated Date</th>
+                    <th>Last Updated By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Books will be rendered here by JS -->
+            </tbody>
+        </table>
+        <div id="pageInfo" style="margin-top:10px; text-align:center; color:#444; font-size:1.08rem;"></div>
+        <div id="pagination" style="margin-top:8px; display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap;"></div>
+        <div id="pageControls" style="margin-top:8px; display:flex; justify-content:center; align-items:center; gap:12px; flex-wrap:wrap;"></div>
+    </div>
+    <script>
+        let books = [];
+        let editMode = false;
+        let loading = false;
+        let editBookId = null;
+        const API_URL = 'http://localhost:8082/booknet/inventory';
+
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalPages = 1;
+        let lastSearchObj = null;
+        let isSearchMode = false;
+
+        async function fetchBooks(page = 1, size = 10, searchObj = null) {
+            setLoading(true);
+            try {
+                // Spring Data uses 0-based page index
+                let url = `${API_URL}?page=${page - 1}&size=${size}`;
+                let booksData, total, totalElements, pageNumber;
+                if (searchObj && Object.keys(searchObj).length > 0) {
+                    isSearchMode = true;
+                    const res = await fetch(`${API_URL}/search?page=${page - 1}&size=${size}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(searchObj)
+                    });
+                    if (!res.ok) throw new Error('Failed to fetch books');
+                    const data = await res.json();
+                    booksData = data.content || [];
+                    total = data.totalPages || 1;
+                    totalElements = data.totalElements || booksData.length;
+                    pageNumber = (typeof data.number === 'number') ? data.number + 1 : page;
+                } else {
+                    isSearchMode = false;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error('Failed to fetch books');
+                    const data = await res.json();
+                    booksData = data.content || [];
+                    total = data.totalPages || 1;
+                    totalElements = data.totalElements || booksData.length;
+                    pageNumber = (typeof data.number === 'number') ? data.number + 1 : page;
+                }
+                books = booksData;
+                totalPages = total;
+                currentPage = pageNumber;
+                window.totalElements = totalElements; // for info display if needed
+                renderBooks();
+                renderPagination();
+            } catch (err) {
+                alert('Error loading books: ' + err.message);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function renderBooks() {
+            const tbody = document.querySelector('#booksTable tbody');
+            tbody.innerHTML = '';
+            books.forEach(book => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${book.bookId ?? ''}</td>
+                    <td>${book.bookName ?? ''}</td>
+                    <td>${book.authorName ?? ''}</td>
+                    <td>${book.bookTitle ?? ''}</td>
+                    <td>${book.description ?? ''}</td>
+                    <td>${book.category ?? ''}</td>
+                    <td>$${Number(book.price).toFixed(2)}</td>
+                    <td>${book.remainingStock ?? ''}</td>
+                    <td>${book.totalStock ?? ''}</td>
+                    <td>${book.registrationDateTime ?? ''}</td>
+                    <td>${book.updatedDateTime ?? ''}</td>
+                    <td>${book.lastUpdateBy ?? ''}</td>
+                    <td class="actions" style="display:flex; gap:16px; align-items:center;">
+                        <button class="edit" onclick="editBook('${book.bookId}')">Edit</button>
+                        <button class="delete" onclick="deleteBook('${book.bookId}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderPagination() {
+            const pagDiv = document.getElementById('pagination');
+            const pageControls = document.getElementById('pageControls');
+            pagDiv.innerHTML = '';
+            pageControls.innerHTML = '';
+            console.log('renderPagination:', { currentPage, totalPages });
+            if (totalPages <= 1) {
+                document.getElementById('pageInfo').textContent = '';
+                return;
+            }
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+
+            // First page button
+            const firstBtn = document.createElement('button');
+            firstBtn.textContent = 'First';
+            firstBtn.disabled = currentPage === 1;
+            firstBtn.onclick = () => { currentPage = 1; fetchBooks(currentPage, pageSize, lastSearchObj); };
+            pagDiv.appendChild(firstBtn);
+
+            // Previous page button
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { currentPage--; fetchBooks(currentPage, pageSize, lastSearchObj); };
+            pagDiv.appendChild(prevBtn);
+
+            // Page numbers
+            if (totalPages <= 5) {
+                for (let i = 1; i <= totalPages; i++) {
+                    const btn = document.createElement('button');
+                    btn.textContent = i;
+                    btn.disabled = i === currentPage;
+                    btn.onclick = () => { currentPage = i; fetchBooks(currentPage, pageSize, lastSearchObj); };
+                    pagDiv.appendChild(btn);
+                }
+            } else {
+                let start = Math.max(1, currentPage - 2);
+                let end = Math.min(totalPages, currentPage + 2);
+                if (start > 1) {
+                    const btn = document.createElement('button');
+                    btn.textContent = '1';
+                    btn.disabled = currentPage === 1;
+                    btn.onclick = () => { currentPage = 1; fetchBooks(currentPage, pageSize, lastSearchObj); };
+                    pagDiv.appendChild(btn);
+                    if (start > 2) {
+                        const ellipsis = document.createElement('span');
+                        ellipsis.textContent = '...';
+                        pagDiv.appendChild(ellipsis);
+                    }
+                }
+                for (let i = start; i <= end; i++) {
+                    const btn = document.createElement('button');
+                    btn.textContent = i;
+                    btn.disabled = i === currentPage;
+                    btn.onclick = () => { currentPage = i; fetchBooks(currentPage, pageSize, lastSearchObj); };
+                    pagDiv.appendChild(btn);
+                }
+                if (end < totalPages) {
+                    if (end < totalPages - 1) {
+                        const ellipsis = document.createElement('span');
+                        ellipsis.textContent = '...';
+                        pagDiv.appendChild(ellipsis);
+                    }
+                    const btn = document.createElement('button');
+                    btn.textContent = totalPages;
+                    btn.disabled = currentPage === totalPages;
+                    btn.onclick = () => { currentPage = totalPages; fetchBooks(currentPage, pageSize, lastSearchObj); };
+                    pagDiv.appendChild(btn);
+                }
+            }
+
+            // Next page button
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => { currentPage++; fetchBooks(currentPage, pageSize, lastSearchObj); };
+            pagDiv.appendChild(nextBtn);
+
+            // Last page button
+            const lastBtn = document.createElement('button');
+            lastBtn.textContent = 'Last';
+            lastBtn.disabled = currentPage === totalPages;
+            lastBtn.onclick = () => { currentPage = totalPages; fetchBooks(currentPage, pageSize, lastSearchObj); };
+            pagDiv.appendChild(lastBtn);
+
+            // Page size selector
+            const sizeLabel = document.createElement('label');
+            sizeLabel.textContent = 'Page size:';
+            sizeLabel.style.marginRight = '4px';
+            const sizeSelect = document.createElement('select');
+            [5, 10, 20, 50].forEach(size => {
+                const opt = document.createElement('option');
+                opt.value = size;
+                opt.textContent = size;
+                if (size === pageSize) opt.selected = true;
+                sizeSelect.appendChild(opt);
+            });
+            sizeSelect.onchange = function() {
+                pageSize = parseInt(this.value);
+                currentPage = 1;
+                fetchBooks(currentPage, pageSize, lastSearchObj);
+            };
+            pageControls.appendChild(sizeLabel);
+            pageControls.appendChild(sizeSelect);
+
+            // Jump to page input
+            const jumpLabel = document.createElement('label');
+            jumpLabel.textContent = 'Jump to page:';
+            jumpLabel.style.marginLeft = '16px';
+            jumpLabel.style.marginRight = '4px';
+            const jumpInput = document.createElement('input');
+            jumpInput.type = 'number';
+            jumpInput.min = 1;
+            jumpInput.max = totalPages;
+            jumpInput.value = currentPage;
+            jumpInput.style.width = '60px';
+            jumpInput.style.marginRight = '4px';
+            const jumpBtn = document.createElement('button');
+            jumpBtn.textContent = 'Go';
+            jumpBtn.onclick = function() {
+                let val = parseInt(jumpInput.value);
+                if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                    currentPage = val;
+                    fetchBooks(currentPage, pageSize, lastSearchObj);
+                }
+            };
+            pageControls.appendChild(jumpLabel);
+            pageControls.appendChild(jumpInput);
+            pageControls.appendChild(jumpBtn);
+        }
+
+        function setLoading(isLoading) {
+            loading = isLoading;
+            document.body.style.opacity = isLoading ? 0.5 : 1;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Add Book Modal Logic ---
+            const addBookModal = document.getElementById('addBookModal');
+            const addBookPanel = document.getElementById('addBookPanel');
+            const openAddBookBtn = document.getElementById('openAddBookBtn');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+            function showAddBookModal() {
+                addBookModal.style.display = 'flex';
+                setTimeout(() => {
+                    addBookPanel.style.opacity = '1';
+                    addBookPanel.style.transform = 'translateY(0) scale(1)';
+                }, 10);
+            }
+            function hideAddBookModal() {
+                addBookPanel.style.opacity = '0';
+                addBookPanel.style.transform = 'translateY(-40px) scale(0.98)';
+                setTimeout(() => {
+                    addBookModal.style.display = 'none';
+                }, 350);
+            }
+            if (openAddBookBtn) openAddBookBtn.onclick = showAddBookModal;
+            if (cancelEditBtn) cancelEditBtn.onclick = hideAddBookModal;
+            if (addBookModal) {
+                addBookModal.onclick = function(e) {
+                    if (e.target === addBookModal) hideAddBookModal();
+                };
+            }
+
+            // --- Bulk Upload Modal Logic ---
+            const bulkUploadModal = document.getElementById('bulkUploadModal');
+            const bulkUploadPanel = document.getElementById('bulkUploadPanel');
+            const openBulkDateBtn = document.getElementById('openBulkDateBtn');
+            const cancelBulkUploadBtn = document.getElementById('cancelBulkUploadBtn');
+            const csvFileInput = document.getElementById('csvFile');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileError = document.getElementById('fileError');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            function showBulkUploadModal() {
+                bulkUploadModal.style.display = 'flex';
+                setTimeout(() => {
+                    bulkUploadPanel.style.opacity = '1';
+                    bulkUploadPanel.style.transform = 'translateY(0) scale(1)';
+                }, 10);
+            }
+            
+            function hideBulkUploadModal() {
+                bulkUploadPanel.style.opacity = '0';
+                bulkUploadPanel.style.transform = 'translateY(-40px) scale(0.98)';
+                setTimeout(() => {
+                    bulkUploadModal.style.display = 'none';
+                    // Reset form
+                    document.getElementById('bulkUploadForm').reset();
+                    fileInfo.style.display = 'none';
+                    fileError.style.display = 'none';
+                }, 350);
+            }
+            
+            if (openBulkDateBtn) openBulkDateBtn.onclick = showBulkUploadModal;
+            if (cancelBulkUploadBtn) cancelBulkUploadBtn.onclick = hideBulkUploadModal;
+            if (bulkUploadModal) {
+                bulkUploadModal.onclick = function(e) {
+                    if (e.target === bulkUploadModal) hideBulkUploadModal();
+                };
+            }
+            
+            // File selection handling
+            if (csvFileInput) {
+                csvFileInput.onchange = function() {
+                    const file = this.files[0];
+                    if (file) {
+                        // Check file size (10MB = 10 * 1024 * 1024 bytes)
+                        const maxSize = 10 * 1024 * 1024;
+                        if (file.size > maxSize) {
+                            fileError.style.display = 'block';
+                            fileInfo.style.display = 'none';
+                            errorMessage.textContent = 'File size must be less than 10MB';
+                            this.value = '';
+                            return;
+                        }
+                        
+                        // Check file type
+                        if (!file.name.toLowerCase().endsWith('.csv')) {
+                            fileError.style.display = 'block';
+                            fileInfo.style.display = 'none';
+                            errorMessage.textContent = 'Please select a CSV file';
+                            this.value = '';
+                            return;
+                        }
+                        
+                        // Show file info
+                        fileError.style.display = 'none';
+                        fileInfo.style.display = 'block';
+                        fileName.textContent = file.name;
+                        fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+                    }
+                };
+            }
+            
+            // Bulk upload form submission
+            document.getElementById('bulkUploadForm').onsubmit = async function(e) {
+                e.preventDefault();
+                const file = csvFileInput.files[0];
+                if (!file) {
+                    alert('Please select a CSV file');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_URL}/book/bulk`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result === true || result.success === true) {
+                            alert('Uploaded Successfully');
+                            hideBulkUploadModal();
+                            // Refresh the books list
+                            fetchBooks(currentPage, pageSize, lastSearchObj);
+                        } else {
+                            alert('Failed to upload');
+                        }
+                    } else {
+                        alert('Failed to upload');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Failed to upload');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            // --- Search Modal Logic ---
+            const searchModal = document.getElementById('searchModal');
+            const searchPanel = document.getElementById('searchPanel');
+            const openSearchBtn = document.getElementById('openSearchBtn');
+            const cancelSearchBtn = document.getElementById('cancelSearchBtn');
+            function showSearchModal() {
+                searchModal.style.display = 'flex';
+                setTimeout(() => {
+                    searchPanel.style.opacity = '1';
+                    searchPanel.style.transform = 'translateY(0) scale(1)';
+                }, 10);
+            }
+            function hideSearchModal() {
+                searchPanel.style.opacity = '0';
+                searchPanel.style.transform = 'translateY(-40px) scale(0.98)';
+                setTimeout(() => {
+                    searchModal.style.display = 'none';
+                }, 350);
+            }
+            if (openSearchBtn) openSearchBtn.onclick = showSearchModal;
+            if (cancelSearchBtn) cancelSearchBtn.onclick = hideSearchModal;
+            if (searchModal) {
+                searchModal.onclick = function(e) {
+                    if (e.target === searchModal) hideSearchModal();
+                };
+            }
+
+            // --- Add Book Multi-Entry Logic ---
+            const bookEntriesDiv = document.getElementById('bookEntries');
+            const addBookEntryBtn = document.getElementById('addBookEntryBtn');
+            let bookEntryCount = 0;
+            function createBookEntry(data = {}) {
+                bookEntryCount++;
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'book-entry';
+                entryDiv.style.border = '1px solid #e0e0e0';
+                entryDiv.style.borderRadius = '6px';
+                entryDiv.style.padding = '12px 10px 8px 10px';
+                entryDiv.style.marginBottom = '10px';
+                entryDiv.style.position = 'relative';
+                entryDiv.innerHTML = `
+                    <button type="button" class="removeEntryBtn" style="position:absolute; top:8px; right:8px; background:#e53935; color:#fff; border:none; border-radius:50%; width:24px; height:24px; font-size:1.1rem; display:${bookEntryCount > 1 ? 'block' : 'none'};">&times;</button>
+                    <input type="text" class="bookName" placeholder="Book Name" value="${data.bookName || ''}" required>
+                    <input type="text" class="authorName" placeholder="Author Name" value="${data.authorName || ''}" required>
+                    <input type="text" class="bookTitle" placeholder="Book Title" value="${data.bookTitle || ''}" required>
+                    <input type="text" class="description" placeholder="Description" value="${data.description || ''}" required>
+                    <select class="category" required>
+                        <option value="" disabled ${!data.category ? 'selected' : ''}>Select Category</option>
+                        <optgroup label="Fiction Categories">
+                            <option${data.category==='Fantasy'?' selected':''}>Fantasy</option>
+                            <option${data.category==='Science Fiction'?' selected':''}>Science Fiction</option>
+                            <option${data.category==='Mystery'?' selected':''}>Mystery</option>
+                            <option${data.category==='Thriller'?' selected':''}>Thriller</option>
+                            <option${data.category==='Romance'?' selected':''}>Romance</option>
+                            <option${data.category==='Historical Fiction'?' selected':''}>Historical Fiction</option>
+                            <option${data.category==='Horror'?' selected':''}>Horror</option>
+                            <option${data.category==='Adventure'?' selected':''}>Adventure</option>
+                            <option${data.category==='Dystopian'?' selected':''}>Dystopian</option>
+                            <option${data.category==='Literary Fiction'?' selected':''}>Literary Fiction</option>
+                        </optgroup>
+                        <optgroup label="Non-Fiction Categories">
+                            <option${data.category==='Biography / Autobiography'?' selected':''}>Biography / Autobiography</option>
+                            <option${data.category==='Self-help / Personal Development'?' selected':''}>Self-help / Personal Development</option>
+                            <option${data.category==='History'?' selected':''}>History</option>
+                            <option${data.category==='Philosophy'?' selected':''}>Philosophy</option>
+                            <option${data.category==='Science'?' selected':''}>Science</option>
+                            <option${data.category==='Travel'?' selected':''}>Travel</option>
+                            <option${data.category==='Psychology'?' selected':''}>Psychology</option>
+                            <option${data.category==='True Crime'?' selected':''}>True Crime</option>
+                            <option${data.category==='Religion / Spirituality'?' selected':''}>Religion / Spirituality</option>
+                            <option${data.category==='Business / Finance'?' selected':''}>Business / Finance</option>
+                        </optgroup>
+                        <optgroup label="Children & Young Adult">
+                            <option${data.category==='Picture Books'?' selected':''}>Picture Books</option>
+                            <option${data.category==='Early Readers'?' selected':''}>Early Readers</option>
+                            <option${data.category==='Middle Grade'?' selected':''}>Middle Grade</option>
+                            <option${data.category==='Young Adult (YA) Fiction'?' selected':''}>Young Adult (YA) Fiction</option>
+                            <option${data.category==='Educational / Learning Books'?' selected':''}>Educational / Learning Books</option>
+                            <option${data.category==='Fairy Tales & Folklore'?' selected':''}>Fairy Tales & Folklore</option>
+                        </optgroup>
+                        <optgroup label="Academic / Educational">
+                            <option${data.category==='Textbooks'?' selected':''}>Textbooks</option>
+                            <option${data.category==='Engineering'?' selected':''}>Engineering</option>
+                            <option${data.category==='Mathematics'?' selected':''}>Mathematics</option>
+                            <option${data.category==='Computer Science'?' selected':''}>Computer Science</option>
+                            <option${data.category==='Law'?' selected':''}>Law</option>
+                            <option${data.category==='Medicine'?' selected':''}>Medicine</option>
+                            <option${data.category==='Language Learning'?' selected':''}>Language Learning</option>
+                            <option${data.category==='Exam Preparation (e.g., GRE, SAT)'?' selected':''}>Exam Preparation (e.g., GRE, SAT)</option>
+                        </optgroup>
+                        <optgroup label="Technical / Professional">
+                            <option${data.category==='Programming'?' selected':''}>Programming</option>
+                            <option${data.category==='Software Development'?' selected':''}>Software Development</option>
+                            <option${data.category==='Networking'?' selected':''}>Networking</option>
+                            <option${data.category==='Cybersecurity'?' selected':''}>Cybersecurity</option>
+                            <option${data.category==='Data Science / AI / ML'?' selected':''}>Data Science / AI / ML</option>
+                            <option${data.category==='Project Management'?' selected':''}>Project Management</option>
+                            <option${data.category==='Design / UI-UX'?' selected':''}>Design / UI-UX</option>
+                            <option${data.category==='DevOps / Cloud'?' selected':''}>DevOps / Cloud</option>
+                        </optgroup>
+                        <optgroup label="Other"> <option${data.category==='Other'?' selected':''}>Other</option> </optgroup>
+                    </select>
+                    <input type="number" class="price" placeholder="Price" min="0" step="0.01" value="${data.price || ''}" required>
+                    <input type="number" class="totalStock" placeholder="Total Stock" min="0" value="${data.totalStock || ''}" required>
+                `;
+                // Remove button logic
+                entryDiv.querySelector('.removeEntryBtn').onclick = function() {
+                    entryDiv.remove();
+                    bookEntryCount--;
+                    // Always show remove button if more than one entry
+                    document.querySelectorAll('.book-entry .removeEntryBtn').forEach((btn, idx, arr) => {
+                        btn.style.display = arr.length > 1 ? 'block' : 'none';
+                    });
+                };
+                bookEntriesDiv.appendChild(entryDiv);
+                // Always show remove button if more than one entry
+                document.querySelectorAll('.book-entry .removeEntryBtn').forEach((btn, idx, arr) => {
+                    btn.style.display = arr.length > 1 ? 'block' : 'none';
+                });
+            }
+            // Initial single entry
+            bookEntriesDiv.innerHTML = '';
+            bookEntryCount = 0;
+            createBookEntry();
+            if (addBookEntryBtn) {
+                addBookEntryBtn.onclick = function() {
+                    createBookEntry();
+                };
+            }
+            // Update submit button text
+            function updateSubmitBtnText() {
+                const submitBtn = document.getElementById('submitBtn');
+                const count = document.querySelectorAll('.book-entry').length;
+                submitBtn.textContent = count > 1 ? 'Add Books' : 'Add Book';
+            }
+            // Observe changes to update button text
+            const observer = new MutationObserver(updateSubmitBtnText);
+            observer.observe(bookEntriesDiv, { childList: true });
+
+            // Update form submission to send a list
+            document.getElementById('bookForm').onsubmit = async function() {
+                const entries = Array.from(document.querySelectorAll('.book-entry')).map(entry => ({
+                    bookName: entry.querySelector('.bookName').value.trim(),
+                    authorName: entry.querySelector('.authorName').value.trim(),
+                    bookTitle: entry.querySelector('.bookTitle').value.trim(),
+                    description: entry.querySelector('.description').value.trim(),
+                    category: entry.querySelector('.category').value,
+                    price: parseFloat(entry.querySelector('.price').value),
+                    totalStock: parseInt(entry.querySelector('.totalStock').value)
+                }));
+                setLoading(true);
+                try {
+                    if (editMode && editBookId) {
+                        // Edit single book
+                        const bookData = { ...entries[0], bookId: editBookId };
+                        const res = await fetch(API_URL, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(bookData)
+                        });
+                        if (!res.ok) throw new Error('Failed to update book');
+                    } else {
+                        // Add books
+                        const res = await fetch(API_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(entries)
+                        });
+                        if (!res.ok) throw new Error('Failed to add book(s)');
+                    }
+                    await fetchBooks(currentPage, pageSize, lastSearchObj);
+                    this.reset();
+                    // Reset to single entry
+                    bookEntriesDiv.innerHTML = '';
+                    bookEntryCount = 0;
+                    createBookEntry();
+                    editMode = false;
+                    editBookId = null;
+                    document.getElementById('submitBtn').textContent = 'Add Book';
+                    document.getElementById('cancelEditBtn').style.display = 'none';
+                    hideAddBookModal();
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            // In editBook function, open modal with single pre-filled entry and switch to edit mode
+            window.editBook = function(bookId) {
+                const book = books.find(b => b.bookId == bookId);
+                if (book) {
+                    editMode = true;
+                    editBookId = book.bookId;
+                    // Reset entries and add one pre-filled
+                    bookEntriesDiv.innerHTML = '';
+                    bookEntryCount = 0;
+                    createBookEntry({
+                        bookName: book.bookName,
+                        authorName: book.authorName,
+                        bookTitle: book.bookTitle,
+                        description: book.description,
+                        category: book.category,
+                        price: book.price,
+                        totalStock: book.totalStock
+                    });
+                    // Hide the + button in edit mode
+                    addBookEntryBtn.style.display = 'none';
+                    // Set submit button text
+                    document.getElementById('submitBtn').textContent = 'Update Book';
+                    document.getElementById('cancelEditBtn').style.display = 'inline-block';
+                    showAddBookModal();
+                }
+            }
+
+            window.deleteBook = async function(bookId) {
+                if (!confirm('Are you sure you want to delete this book?')) return;
+                setLoading(true);
+                try {
+                    const res = await fetch(`${API_URL}/${bookId}`, {
+                        method: 'DELETE',
+                    });
+                    if (!res.ok) throw new Error('Failed to delete book');
+                    await fetchBooks(currentPage, pageSize, lastSearchObj);
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            // In cancelEditBtn.onclick, restore multi-entry mode
+            if (cancelEditBtn) cancelEditBtn.onclick = function() {
+                editMode = false;
+                editBookId = null;
+                bookEntriesDiv.innerHTML = '';
+                bookEntryCount = 0;
+                createBookEntry();
+                addBookEntryBtn.style.display = 'inline-block';
+                document.getElementById('submitBtn').textContent = 'Add Book';
+                this.style.display = 'none';
+                hideAddBookModal();
+            };
+
+            document.getElementById('searchForm').onsubmit = function(e) {
+                e.preventDefault();
+                const form = e.target;
+                const searchObj = {};
+                
+                // Map form fields to Java DTO structure
+                const bookName = form.querySelector('[name="bookName"]').value;
+                const authorName = form.querySelector('[name="authorName"]').value;
+                const bookTitle = form.querySelector('[name="bookTitle"]').value;
+                const category = form.querySelector('[name="category"]').value;
+                const availableStock = form.querySelector('[name="availableSalesQuantity"]').value;
+                const searchCondition = form.querySelector('[name="availableSalesQuantityOp"]').value;
+                
+                // Only add fields that have values
+                if (bookName && bookName.trim() !== '') {
+                    searchObj.bookName = bookName.trim();
+                }
+                if (authorName && authorName.trim() !== '') {
+                    searchObj.authorName = authorName.trim();
+                }
+                if (bookTitle && bookTitle.trim() !== '') {
+                    searchObj.bookTitle = bookTitle.trim();
+                }
+                if (category && category.trim() !== '') {
+                    searchObj.category = category.trim();
+                }
+                if (availableStock && availableStock.trim() !== '') {
+                    searchObj.availableStock = parseInt(availableStock);
+                }
+                if (searchCondition && searchCondition.trim() !== '') {
+                    // Convert simple operators to proper text format
+                    const operatorMap = {
+                        '=': 'EQUAL',
+                        '>': 'GREATER_THAN',
+                        '<': 'LESS_THAN'
+                    };
+                    searchObj.searchCondition = operatorMap[searchCondition] || searchCondition;
+                }
+                
+                lastSearchObj = searchObj;
+                currentPage = 1;
+                fetchBooks(currentPage, pageSize, lastSearchObj);
+                hideSearchModal(); // Close the search modal after search
+            };
+            document.getElementById('clearSearchBtn').onclick = function() {
+                document.getElementById('searchForm').reset();
+                lastSearchObj = null;
+                currentPage = 1;
+                fetchBooks(currentPage, pageSize, null);
+            };
+
+            // Initial fetch
+            fetchBooks(currentPage, pageSize, null);
+        });
+    </script>
+</body>
+</html> 
